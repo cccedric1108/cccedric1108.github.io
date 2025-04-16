@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>萩语转换器-稳定版</title>
+  <style>
+    body { padding: 20px; font-family: -apple-system, sans-serif; background: #f8f9fa; }
+    #input { width: 100%; height: 150px; padding: 15px; border: 2px solid #007AFF; border-radius: 12px; font-size: 18px; margin-bottom: 20px; }
+    #output { padding: 15px; background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); word-break: break-all; min-height: 60px; }
+    .status { color: #666; font-size: 14px; text-align: center; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <textarea id="input" placeholder="输入中文..."></textarea>
+  <div class="status" id="status">就绪！开始输入中文...</div>
+  <div id="output"></div>
+  
+  <!-- 通过 CDN 引入 pinyin-pro -->
+  <script src="https://unpkg.com/pinyin-pro"></script>
+  <script>
+    const { pinyin } = pinyinPro;
+
+    // 声母表（用于分割拼音）
+    const initials = ["b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h",
+                      "j", "q", "x", "zh", "ch", "sh", "r", "z", "c", "s", "y", "w"];
+
+    function convertToQiu(text) {
+      let pinyinArray = pinyin(text, {
+        toneType: 'num',  // 使用数字标注声调
+        type: 'array',    // 返回数组
+        multiple: false   // 只使用标准拼音
+      });
+
+      let converted = pinyinArray.map(syllable => {
+        if (syllable.length === 1) return syllable; // 单个字母（如"a"）直接返回
+        
+        // 找到该拼音的声母
+        let initial = initials.find(pre => syllable.startsWith(pre));
+        
+        if (initial) {
+          let final = syllable.slice(initial.length, -1); // 韵母部分（去掉最后的声调）
+          let tone = syllable.slice(-1); // 声调
+          return `${final}${tone}${initial}`;
+        } else {
+          return syllable; // 没有声母，直接返回
+        }
+      });
+
+      return converted.join('.') + '.';
+    }
+
+    document.getElementById('input').addEventListener('input', function(e) {
+      document.getElementById('output').textContent = convertToQiu(e.target.value);
+    });
+  </script>
+</body>
+</html>
